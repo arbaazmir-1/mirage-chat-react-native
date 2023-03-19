@@ -21,3 +21,4 @@ web-build/
 
 # Ignore Firebase service account credentials
 firebaseConfig.js
+firebase.js

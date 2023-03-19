@@ -9,6 +9,9 @@ npm-debug.*
 *.mobileprovision
 *.orig.*
 web-build/
+# ignore firebase 
+firebase.json
+firebase.js
 
 # macOS
 .DS_Store

@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import React, { useLayoutEffect, useState, useEffect } from "react";
-import { Input, Button } from "@rneui/base";
+import { Input, Button,ListItem,Avatar } from "@rneui/base";
 import CustomListItem from "../components/CustomListItem";
 import { db } from "../firebase";
 import { collection, getDoc, doc ,addDoc, getDocs} from "firebase/firestore";
@@ -64,45 +64,19 @@ const NewChat = ({ navigation }) => {
     setChatIds([]);
    try{ 
     setLoading(true);
+    
     //check if the chat already exists
     const searchReFU = await getDocs(collection(db, "users", auth.currentUser.email, "chats"));
 
-    searchReFU.forEach((doc) => {
-        setChatIds((prev) => [...prev, doc.data().chatId]);
-        
-    });
-
-    chatIds.forEach(async (chatId) => {
-        console.log(chatId);
-        const docRef = doc(db, "chats", chatId);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-            console.log("Document data:", docSnap.data());
-            if (docSnap.data().users.includes(user.email)) {
-                Alert.alert("Error", "Chat already exists!");
-                setLoading(false);
-                //break out of the loop
-                return;
-
-                
-
-            }
-        }
-    });
+    if(searchReFU.empty) {
+        const docRef = await addDoc(collection(db, "chats"), {
+            users: [auth.currentUser.email, user.email],
+            messages: [],
     
-
-
-
-    //create the chat
-    const docRef = await addDoc(collection(db, "chats"), {
-        users: [auth.currentUser.email, user.email],
-        messages: [],
-
-      });
-      console.log("Document written with ID: ", docRef.id);
-      //add the chat to the user's chats
-        await addDoc(collection(db, "users", auth.currentUser.email, "chats"), {
+          });
+          await addDoc(collection(db, "users", auth.currentUser.email, "chats"), {
             chatId: docRef.id,
+            chatWith: user.email,
         });
         await addDoc(collection(db, "users", user.email, "chats"), {
             chatId: docRef.id,
@@ -111,6 +85,52 @@ const NewChat = ({ navigation }) => {
             chatId: docRef.id,
         });
         setLoading(false);
+        return;
+        
+        
+    }
+    
+    
+
+    
+    searchReFU.forEach(async(doc) => {
+        
+        //check if the chat already exists
+        if(doc.data().chatWith === user.email) {
+            Alert.alert("Error", "Chat already exists");
+            setLoading(false);
+            return;
+        }
+        else{
+            const docRef = await addDoc(collection(db, "chats"), {
+                users: [auth.currentUser.email, user.email],
+                messages: [],
+        
+              });
+              await addDoc(collection(db, "users", auth.currentUser.email, "chats"), {
+                chatId: docRef.id,
+                chatWith: user.email,
+            });
+            await addDoc(collection(db, "users", user.email, "chats"), {
+                chatId: docRef.id,
+            });
+            await addDoc(collection(db, "users", user.email, "chats"), {
+                chatId: docRef.id,
+            });
+            setLoading(false);
+            return;
+        }
+        
+    });
+    
+
+    
+    
+    
+
+
+
+    
     } catch(e) {
         setLoading(false);
         Alert.alert("Error", e.message);
@@ -155,14 +175,19 @@ const NewChat = ({ navigation }) => {
         <TouchableOpacity
             onPress={createChat}
             >
-        <CustomListItem
-            key={user?.email}
-            id={user?.uid}
-            chatName={user?.email}
-            photoURL={user?.photoURL}
+        <ListItem>
+                <Avatar rounded source={{ uri: user?.photoURL }} />
+
+
+            <ListItem.Content>
+                <ListItem.Title>{user?.email}</ListItem.Title>
+            </ListItem.Content>
+
+            <ListItem.Subtitle>Create Chat</ListItem.Subtitle>
+
             
-         
-        />
+
+        </ListItem>
         </TouchableOpacity>
         )
     }

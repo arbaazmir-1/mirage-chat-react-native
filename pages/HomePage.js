@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   StatusBar,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import React,{useEffect,useState} from "react";
 import { Button, FAB, Avatar, Icon } from "@rneui/base";
@@ -23,6 +24,7 @@ const HomePage = ({ navigation }) => {
   const [chatIds, setChatIds] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [refreshing, setRefreshing] = React.useState(false);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -81,14 +83,14 @@ const HomePage = ({ navigation }) => {
             setError("You have no chats yet!");
             return;
         }
-
+        
 
 
       chatsRefId.forEach(async (doc) => {
         
         setChatIds((prev) => [...prev, doc.data().chatId]);
 
-        
+
       });
       chatIds.forEach(async (chatId) => {
         
@@ -109,18 +111,20 @@ const HomePage = ({ navigation }) => {
             
             // add the chat to the chats array
             setChats((prev) => [...prev, chat]);
+            setLoading(false);
+
+                
             
-            
-            
+                
 
 
             
         } else {
           console.log("No such document!");
-          setLoading(false);
+          
         }
         });
-
+        
         setLoading(false);
         
     } catch (error) {
@@ -129,37 +133,59 @@ const HomePage = ({ navigation }) => {
       Alert.alert("Error", error.message);
       
     }
-  };
+  };         
   
   useEffect(() => {
-    fetchAllChats();
-  }, []);
-  
 
+    
+
+    fetchAllChats();
+    
+    
+  }, []);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    fetchAllChats();
+    setRefreshing(false);
+  }, []);
+
+const enterChat= (id) => {
+    navigation.navigate("Chat", {
+        id,
+    });
+
+}
   return (
     <SafeAreaView style={{ flex: 1 }}>
         <StatusBar style="auto" />
-        {loading ? (
+        {loading && !refreshing ? (
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
             <ActivityIndicator size="large" color="#2C6BED" />
         </View>
         ) : (
-        <View style={{ flex: 1 }}>
-
+        <View style={{ flex: 1 }}> 
+  
         {error && (
-            <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+            
                 <Text style={{ fontSize: 18, color: "gray" }}>{error}</Text>
-            </View>
+            
 
         )}
 
-      <ScrollView>
+      <ScrollView
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }>
+      
+      
         {chats?.map((chat) => (
             <CustomListItem
             key={chat.chatId}
             id={chat.chatId}
             chatName={chat.otherUser.name}
             photoURL={chat.otherUser.photoURL}
+            enterChat={enterChat}
 
             
            

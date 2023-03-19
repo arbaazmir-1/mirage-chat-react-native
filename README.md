@@ -1,5 +1,6 @@
 # Mirage Chat React Native
 ## Mirage Chat React Native is a repository containing an one-to-one chat application built using React Native. This application was built by me as a way to learn React Native, and is far from perfect but still functional. The developer is currently working on a better version of the application.
+This isn't a stable chat app.
 
 ## Features
 The Mirage Chat React Native application includes the following features:
